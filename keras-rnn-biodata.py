@@ -9,18 +9,18 @@ import keras.backend as K
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.layers import Embedding
 from keras.layers import LSTM
+from keras import optimizers
 
 # -----------------------------------------------------------------------------
 # setup some free parameters of the experiment 
 data_dim = 2
-timesteps = 16
-hidden_nodes = 16
-batch_size = 32
+timesteps = 32
+hidden_nodes = 30
+batch_size = 16
 epochs = 10
 verbose = 1
-validation_split = .5
+validation_split = .2
 
 # -----------------------------------------------------------------------------
 # 
@@ -85,6 +85,7 @@ for mo in mos:
 
 
 # -----------------------------------------------------------------------------
+'''
 model = Sequential()
 model.add(LSTM(hidden_nodes, 
     return_sequences=True, 
@@ -94,9 +95,35 @@ model.add(LSTM(hidden_nodes,
 model.add(LSTM(hidden_nodes))   
 model.add(Dense(num_classes, 
     activation='softmax'))
+'''
+
+model = Sequential()
+model.add(LSTM(hidden_nodes, 
+    return_sequences=True, 
+    input_shape=(timesteps, data_dim)))   
+model.add(LSTM(hidden_nodes, 
+    dropout=0.2, 
+    recurrent_dropout=0.2))
+model.add(Dense(num_classes, 
+    activation='softmax'))
+
+
+'''
+model = Sequential()
+model.add(LSTM(hidden_nodes, 
+    return_sequences=True, 
+    input_shape=(timesteps, data_dim)))   
+model.add(Dropout(0.5))
+model.add(LSTM(hidden_nodes))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))
+'''
+
+sgd = optimizers.SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', 
-    optimizer='adam', 
+    optimizer=sgd, 
     metrics=['accuracy'])
+
 
 history = model.fit(x_train, y_train, 
     batch_size=batch_size, 
